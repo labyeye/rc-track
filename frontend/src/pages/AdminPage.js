@@ -141,12 +141,13 @@ const AdminPage = () => {
     return {
       totalRc: rcEntries.length,
       totalRcTransferred: rcEntries.filter(
-        (entry) => entry.status === "transferred"
+        (entry) => entry.status?.rcTransferred
       ).length,
-      totalRtoFeeDone: rcEntries.filter((entry) => entry.rtoFeesPaid === true) // Explicitly check for true
-        .length,
+      totalRtoFeeDone: rcEntries.filter(
+        (entry) => entry.status?.rtoFeesPaid === true
+      ).length,
       totalRcTransferLeft: rcEntries.filter(
-        (entry) => entry.status !== "transferred"
+        (entry) => !entry.status?.rcTransferred
       ).length,
     };
   } catch (error) {
