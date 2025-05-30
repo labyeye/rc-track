@@ -9,8 +9,9 @@ import {
   FileText,
   Target,
   RefreshCw,
+  Key,
 } from "lucide-react";
-import { Button, message } from "antd";
+import { Button, message, Modal, Input, Form } from "antd";
 import { useNavigate } from "react-router-dom";
 import { Table, Alert, Spin } from "antd";
 import AuthContext from "../context/AuthContext";
@@ -34,6 +35,10 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [isOwnerView, setIsOwnerView] = useState(false);
   const [error, setError] = useState(null);
+  const [isChangePasswordModalVisible, setIsChangePasswordModalVisible] =
+    useState(false);
+  const [changePasswordLoading, setChangePasswordLoading] = useState(false);
+  const [form] = Form.useForm();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,6 +85,41 @@ const AdminPage = () => {
       setError("Failed to load dashboard data. Please try again later.");
     } finally {
       setLoading(false);
+    }
+  };
+  const handleChangePassword = async (values) => {
+    try {
+      setChangePasswordLoading(true);
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/change-password`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify({
+            currentPassword: values.currentPassword,
+            newPassword: values.newPassword,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to change password");
+      }
+
+      message.success("Password changed successfully");
+      setIsChangePasswordModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Error changing password:", error);
+      message.error(error.message || "Failed to change password");
+    } finally {
+      setChangePasswordLoading(false);
     }
   };
 
@@ -161,6 +201,101 @@ const AdminPage = () => {
       path: "/rclist",
     },
   ];
+  const ChangePasswordButton = () => (
+    <button
+      onClick={() => setIsChangePasswordModalVisible(true)}
+      style={{
+        backgroundColor: "#8b5cf6",
+        color: "white",
+        border: "none",
+        borderRadius: "6px",
+        padding: "8px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        cursor: "pointer",
+        transition: "background-color 0.2s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "#7c3aed";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "#8b5cf6";
+      }}
+    >
+      <Key size={16} />
+      Change Password
+    </button>
+  );
+  const ChangePasswordModal = () => (
+    <Modal
+      title="Change Password"
+      visible={isChangePasswordModalVisible}
+      onCancel={() => {
+        setIsChangePasswordModalVisible(false);
+        form.resetFields();
+      }}
+      footer={null}
+      centered
+    >
+      <Form form={form} layout="vertical" onFinish={handleChangePassword}>
+        <Form.Item
+          name="currentPassword"
+          label="Current Password"
+          rules={[
+            { required: true, message: "Please input your current password" },
+          ]}
+        >
+          <Input.Password placeholder="Enter current password" />
+        </Form.Item>
+
+        <Form.Item
+          name="newPassword"
+          label="New Password"
+          rules={[
+            { required: true, message: "Please input your new password" },
+            { min: 6, message: "Password must be at least 6 characters" },
+          ]}
+          hasFeedback
+        >
+          <Input.Password placeholder="Enter new password" />
+        </Form.Item>
+
+        <Form.Item
+          name="confirmPassword"
+          label="Confirm New Password"
+          dependencies={["newPassword"]}
+          hasFeedback
+          rules={[
+            { required: true, message: "Please confirm your new password" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("newPassword") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(
+                  new Error("The two passwords do not match")
+                );
+              },
+            }),
+          ]}
+        >
+          <Input.Password placeholder="Confirm new password" />
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={changePasswordLoading}
+            style={{ width: "100%" }}
+          >
+            Change Password
+          </Button>
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
 
   const DashboardCards = () => (
     <div style={styles.cardsGrid}>
@@ -421,7 +556,6 @@ const AdminPage = () => {
       </div>
     );
   };
-  
 
   return (
     <div style={styles.container}>
@@ -511,6 +645,7 @@ const AdminPage = () => {
               <div
                 style={{ display: "flex", gap: "16px", alignItems: "center" }}
               >
+                <ChangePasswordButton />
                 <button
                   onClick={toggleOwnerView}
                   style={{
@@ -581,7 +716,6 @@ const AdminPage = () => {
                 <>
                   <DashboardCards />
                   <RcTransferStatusTable />
-                  
                 </>
               )}
 
@@ -598,6 +732,7 @@ const AdminPage = () => {
           )}
         </div>
       </div>
+      <ChangePasswordModal />
     </div>
   );
 };

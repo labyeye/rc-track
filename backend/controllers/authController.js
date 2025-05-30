@@ -51,6 +51,44 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid user data');
   }
 });
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    // Verify current password
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      res.status(401);
+      throw new Error('Current password is incorrect');
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message || 'Password change failed');
+  }
+});
+
+// Add to your exports
+module.exports = {
+  loginUser,
+  registerUser,
+  changePassword,
+};
 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -60,5 +98,6 @@ const generateToken = (id, role) => {
 
 module.exports = {
   loginUser,
-  registerUser
+  registerUser,
+  changePassword
 };

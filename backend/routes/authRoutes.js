@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { loginUser, registerUser } = require('../controllers/authController');
+const { loginUser, registerUser,changePassword } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 router.post('/login', loginUser);
 router.post('/register', protect, registerUser);
-
+router.put('/change-password', protect, changePassword);
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');

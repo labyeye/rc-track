@@ -16,7 +16,7 @@ connectDB();
 app.use(express.json());
 app.use(
   cors({
-    origin: "https://rc-track.vercel.app/",
+    origin: "https://rc-track.vercel.app",
     credentials: true,
     exposedHeaders: ["Content-Disposition"],
   })
