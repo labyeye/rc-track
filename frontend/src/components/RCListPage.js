@@ -40,7 +40,7 @@ const RcListPage = () => {
   const [currentRecord, setCurrentRecord] = useState(null);
   const [form] = Form.useForm();
   const API_BASE_URL =
-    process.env.REACT_APP_API_BASE_URL || "http://localhost:2500";
+    process.env.REACT_APP_API_BASE_URL || "https://rc-track.onrender.com";
 
   const menuItems = [
     {
