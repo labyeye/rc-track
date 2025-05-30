@@ -124,41 +124,41 @@ const AdminPage = () => {
   };
 
   const calculateRcStats = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/rc`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-      });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/rc`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+    });
 
-      if (!response.ok) throw new Error("Failed to fetch RC entries");
+    if (!response.ok) throw new Error("Failed to fetch RC entries");
 
-      const responseData = await response.json();
-      const rcEntries = Array.isArray(responseData.data)
-        ? responseData.data
-        : [];
+    const responseData = await response.json();
+    const rcEntries = Array.isArray(responseData.data)
+      ? responseData.data
+      : [];
 
-      return {
-        totalRc: rcEntries.length,
-        totalRcTransferred: rcEntries.filter(
-          (entry) => entry.status === "transferred"
-        ).length,
-        totalRtoFeeDone: rcEntries.filter((entry) => entry.rtoFeesPaid === true)
-          .length,
-        totalRcTransferLeft: rcEntries.filter(
-          (entry) => entry.status !== "transferred"
-        ).length,
-      };
-    } catch (error) {
-      console.error("Error calculating RC stats:", error);
-      return {
-        totalRc: 0,
-        totalRcTransferred: 0,
-        totalRtoFeeDone: 0,
-        totalRcTransferLeft: 0,
-      };
-    }
-  };
+    return {
+      totalRc: rcEntries.length,
+      totalRcTransferred: rcEntries.filter(
+        (entry) => entry.status === "transferred"
+      ).length,
+      totalRtoFeeDone: rcEntries.filter((entry) => entry.rtoFeesPaid === true) // Explicitly check for true
+        .length,
+      totalRcTransferLeft: rcEntries.filter(
+        (entry) => entry.status !== "transferred"
+      ).length,
+    };
+  } catch (error) {
+    console.error("Error calculating RC stats:", error);
+    return {
+      totalRc: 0,
+      totalRcTransferred: 0,
+      totalRtoFeeDone: 0,
+      totalRcTransferLeft: 0,
+    };
+  }
+};
 
   const toggleOwnerView = () => {
     setIsOwnerView(!isOwnerView);

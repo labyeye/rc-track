@@ -319,7 +319,7 @@ const RcEntryPage = () => {
           <div style={styles.formSection}>
             <h3 style={styles.sectionTitle}>Applicant Details</h3>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Applicant Name</label>
+              <label style={styles.label}>Buyer Name</label>
               <input
                 type="text"
                 name="applicantName"
@@ -330,7 +330,7 @@ const RcEntryPage = () => {
               />
             </div>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Applicant Phone</label>
+              <label style={styles.label}>Buyer Phone</label>
               <input
                 type="tel"
                 name="applicantPhone"

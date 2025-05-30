@@ -8,7 +8,7 @@ exports.getDashboardData = async (req, res, next) => {
     const rcStats = {
       totalRc: rcEntries.length,
       totalRcTransferred: rcEntries.filter(e => e.status === 'transferred').length,
-      totalRtoFeeDone: rcEntries.filter(e => e.rtoFeesPaid).length,
+      totalRtoFeeDone: rcEntries.filter(e => e.rtoFeesPaid === true).length, // Explicitly check for true
       totalRcTransferLeft: rcEntries.filter(e => e.status !== 'transferred').length
     };
 
@@ -25,7 +25,7 @@ exports.getDashboardData = async (req, res, next) => {
         service: []
       },
       monthlyData: [],
-      rcStats: rcStats  // Make sure this is properly nested
+      rcStats: rcStats
     };
 
     res.status(200).json({
@@ -39,12 +39,11 @@ exports.getDashboardData = async (req, res, next) => {
 
 exports.getOwnerDashboardData = async (req, res, next) => {
   try {
-    // Similar to above but filtered for owner
     const rcEntries = await Rc.find({ createdBy: req.user.id });
     const rcStats = {
       totalRc: rcEntries.length,
       totalRcTransferred: rcEntries.filter(e => e.status === 'transferred').length,
-      totalRtoFeeDone: rcEntries.filter(e => e.rtoFeesPaid).length,
+      totalRtoFeeDone: rcEntries.filter(e => e.rtoFeesPaid === true).length, // Explicitly check for true
       totalRcTransferLeft: rcEntries.filter(e => e.status !== 'transferred').length
     };
 
