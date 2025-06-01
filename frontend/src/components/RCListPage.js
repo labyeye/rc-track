@@ -38,6 +38,11 @@ const RcListPage = () => {
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [statusFilters, setStatusFilters] = useState({
+    rcTransferred: null,
+    rtoFeesPaid: null,
+  });
   const [form] = Form.useForm();
   const API_BASE_URL =
     process.env.REACT_APP_API_BASE_URL || "https://rc-track.onrender.com";
@@ -91,9 +96,16 @@ const RcListPage = () => {
     setActiveMenu(menuName);
     navigate(path);
   };
+  const handleStatusFilterChange = (filterName, value) => {
+    setStatusFilters((prev) => ({
+      ...prev,
+      [filterName]: value,
+    }));
+  };
 
   const handleExportExcel = () => {
-    const exportData = rcEntries.map((entry) => ({
+    // Use filteredEntries instead of rcEntries to respect search and filters
+    const exportData = filteredEntries.map((entry) => ({
       "Vehicle Reg No.": entry.vehicleRegNo || "-",
       "Vehicle Name": entry.vehicleName || "-",
       "Owner Name": entry.ownerName || "-",
@@ -101,6 +113,7 @@ const RcListPage = () => {
       Work: entry.work || "-",
       "Dealer Name": entry.dealerName || "-",
       "RTO Agent Name": entry.rtoAgentName || "-",
+      Remarks: entry.remarks || "-",
       "RC Transferred": entry.status?.rcTransferred ? "Yes" : "No",
       "RTO Fees Paid": entry.status?.rtoFeesPaid ? "Yes" : "No",
       "Created At": new Date(entry.createdAt).toLocaleString(),
@@ -109,10 +122,14 @@ const RcListPage = () => {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RC Entries");
-    XLSX.writeFile(
-      wb,
-      `RC_Entries_${new Date().toISOString().split("T")[0]}.xlsx`
-    );
+
+    const filename = searchText
+      ? `RC_Entries_${searchText}_${
+          new Date().toISOString().split("T")[0]
+        }.xlsx`
+      : `RC_Entries_${new Date().toISOString().split("T")[0]}.xlsx`;
+
+    XLSX.writeFile(wb, filename);
   };
 
   const toggleMenu = (menuName) => {
@@ -132,7 +149,7 @@ const RcListPage = () => {
 
   const filteredEntries = rcEntries.filter((entry) => {
     const searchLower = searchText.toLowerCase();
-    return (
+    const matchesSearch =
       (entry.vehicleRegNo &&
         entry.vehicleRegNo.toLowerCase().includes(searchLower)) ||
       (entry.vehicleName &&
@@ -144,14 +161,17 @@ const RcListPage = () => {
       (entry.dealerName &&
         entry.dealerName.toLowerCase().includes(searchLower)) ||
       (entry.rtoAgentName &&
-        entry.rtoAgentName.toLowerCase().includes(searchLower))
-    );
-  });
+        entry.rtoAgentName.toLowerCase().includes(searchLower));
 
-  const handleDownload = (pdfUrl) => {
-    if (!pdfUrl) return;
-    window.open(`${API_BASE_URL}${pdfUrl}`, "_blank");
-  };
+    const matchesRcTransferred =
+      statusFilters.rcTransferred === null ||
+      entry.status?.rcTransferred === statusFilters.rcTransferred;
+    const matchesRtoFeesPaid =
+      statusFilters.rtoFeesPaid === null ||
+      entry.status?.rtoFeesPaid === statusFilters.rtoFeesPaid;
+
+    return matchesSearch && matchesRcTransferred && matchesRtoFeesPaid;
+  });
 
   const handleEdit = (record) => {
     setCurrentRecord(record);
@@ -163,6 +183,7 @@ const RcListPage = () => {
       work: record.work,
       dealerName: record.dealerName,
       rtoAgentName: record.rtoAgentName,
+      remarks: record.remarks,
       rcTransferred: Boolean(record.status?.rcTransferred),
       rtoFeesPaid: Boolean(record.status?.rtoFeesPaid),
     });
@@ -173,7 +194,6 @@ const RcListPage = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      // Structure the data to match schema
       const updateData = {
         vehicleRegNo: values.vehicleRegNo,
         vehicleName: values.vehicleName,
@@ -182,6 +202,7 @@ const RcListPage = () => {
         work: values.work,
         dealerName: values.dealerName,
         rtoAgentName: values.rtoAgentName,
+        remarks: values.remarks,
         status: {
           rcTransferred: Boolean(values.rcTransferred),
           rtoFeesPaid: Boolean(values.rtoFeesPaid),
@@ -222,100 +243,71 @@ const RcListPage = () => {
   };
 
   const handleDelete = async (id) => {
-  if (!window.confirm("Are you sure you want to delete this RC entry?")) {
-    return;
-  }
+    if (!window.confirm("Are you sure you want to delete this RC entry?")) {
+      return;
+    }
 
-  try {
-    setLoading(true);
-    
-    const response = await fetch(`${API_BASE_URL}/api/rc/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        'Content-Type': 'application/json'
-      },
-    });
+    try {
+      setLoading(true);
 
-    // Check if response is ok
-    if (!response.ok) {
-      let errorMessage = "Failed to delete RC entry";
-      
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch (parseError) {
-        // If JSON parsing fails, use status-based error message
-        switch (response.status) {
-          case 404:
-            errorMessage = "RC entry not found";
-            break;
-          case 403:
-            errorMessage = "Not authorized to delete this RC entry";
-            break;
-          case 401:
-            errorMessage = "Authentication required. Please login again.";
-            // Redirect to login if unauthorized
-            localStorage.removeItem("token");
-            navigate("/login");
-            return;
-          default:
-            errorMessage = `Delete failed with status: ${response.status}`;
+      const response = await fetch(`${API_BASE_URL}/api/rc/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Failed to delete RC entry";
+
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          switch (response.status) {
+            case 404:
+              errorMessage = "RC entry not found";
+              break;
+            case 403:
+              errorMessage = "Not authorized to delete this RC entry";
+              break;
+            case 401:
+              errorMessage = "Authentication required. Please login again.";
+              localStorage.removeItem("token");
+              navigate("/login");
+              return;
+            default:
+              errorMessage = `Delete failed with status: ${response.status}`;
+          }
         }
+
+        throw new Error(errorMessage);
       }
-      
-      throw new Error(errorMessage);
+
+      const result = await response.json();
+
+      if (result.success) {
+        setRcEntries((prev) => prev.filter((entry) => entry._id !== id));
+        message.success("RC entry deleted successfully");
+      } else {
+        throw new Error(result.message || "Delete operation failed");
+      }
+    } catch (error) {
+      console.error("Error deleting RC entry:", error);
+
+      if (error.message.includes("fetch")) {
+        message.error(
+          "Network error. Please check your connection and try again."
+        );
+      } else {
+        message.error(error.message || "Failed to delete RC entry");
+      }
+      setError(error.message || "Failed to delete RC entry");
+    } finally {
+      setLoading(false);
     }
-
-    // Parse successful response
-    const result = await response.json();
-    
-    if (result.success) {
-      // Success - update state and show message
-      setRcEntries((prev) => prev.filter((entry) => entry._id !== id));
-      message.success("RC entry deleted successfully");
-    } else {
-      throw new Error(result.message || "Delete operation failed");
-    }
-
-  } catch (error) {
-    console.error("Error deleting RC entry:", error);
-    
-    // Show user-friendly error message
-    if (error.message.includes("fetch")) {
-      message.error("Network error. Please check your connection and try again.");
-    } else {
-      message.error(error.message || "Failed to delete RC entry");
-    }
-    
-    // Set error state for UI feedback
-    setError(error.message || "Failed to delete RC entry");
-  } finally {
-    setLoading(false);
-  }
-};
-
-// Also add this error boundary component at the top of your file for better error handling
-const ErrorBoundary = ({ children, fallback }) => {
-  const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const handleError = (error) => {
-      setHasError(true);
-      setError(error);
-    };
-
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
-
-  if (hasError) {
-    return fallback || <div>Something went wrong: {error?.message}</div>;
-  }
-
-  return children;
-};
+  };
 
   const columns = [
     {
@@ -369,6 +361,13 @@ const ErrorBoundary = ({ children, fallback }) => {
       render: (text) => text || "-",
       sorter: (a, b) =>
         (a.rtoAgentName || "").localeCompare(b.rtoAgentName || ""),
+    },
+    {
+      title: "Remarks",
+      dataIndex: "remarks",
+      key: "remarks",
+      render: (text) => text || "-",
+      sorter: (a, b) => (a.remarks || "").localeCompare(b.remarks || ""),
     },
     {
       title: "Status",
@@ -473,13 +472,8 @@ const ErrorBoundary = ({ children, fallback }) => {
             <Form.Item name="rtoAgentName" label="RTO Agent Name">
               <Input placeholder="Enter RTO agent name" />
             </Form.Item>
-
-            <Form.Item name="status" label="Status">
-              <Select placeholder="Select status">
-                <Option value="pending">Pending</Option>
-                <Option value="transferred">Transferred</Option>
-                <Option value="completed">Completed</Option>
-              </Select>
+            <Form.Item name="remarks" label="Remarks">
+              <TextArea rows={3} placeholder="Enter any remarks" />
             </Form.Item>
 
             <Form.Item name="rcTransferred" valuePropName="checked">
@@ -571,6 +565,47 @@ const ErrorBoundary = ({ children, fallback }) => {
               style={styles.searchInput}
               allowClear
             />
+            <Button
+              type="default"
+              onClick={() => setFilterVisible(!filterVisible)}
+              style={{ marginLeft: "16px" }}
+            >
+              Filter
+            </Button>
+            {filterVisible && (
+              <div style={styles.filterDropdown}>
+                <div style={styles.filterGroup}>
+                  <span style={styles.filterLabel}>RC Transferred:</span>
+                  <Select
+                    style={{ width: 120 }}
+                    value={statusFilters.rcTransferred}
+                    onChange={(value) =>
+                      handleStatusFilterChange("rcTransferred", value)
+                    }
+                    placeholder="All"
+                  >
+                    <Option value={null}>All</Option>
+                    <Option value={true}>Yes</Option>
+                    <Option value={false}>No</Option>
+                  </Select>
+                </div>
+                <div style={styles.filterGroup}>
+                  <span style={styles.filterLabel}>RTO Fees Paid:</span>
+                  <Select
+                    style={{ width: 120 }}
+                    value={statusFilters.rtoFeesPaid}
+                    onChange={(value) =>
+                      handleStatusFilterChange("rtoFeesPaid", value)
+                    }
+                    placeholder="All"
+                  >
+                    <Option value={null}>All</Option>
+                    <Option value={true}>Yes</Option>
+                    <Option value={false}>No</Option>
+                  </Select>
+                </div>
+              </div>
+            )}
             <Button
               type="primary"
               onClick={handleExportExcel}
@@ -775,6 +810,26 @@ const styles = {
         backgroundColor: "transparent",
       },
     },
+  },
+  filterDropdown: {
+    position: "absolute",
+    backgroundColor: "#fff",
+    padding: "16px",
+    borderRadius: "8px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+    zIndex: 10000,
+    marginTop: "8px",
+    display: "flex",
+    gap: "16px",
+  },
+  filterGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+  filterLabel: {
+    fontSize: "14px",
+    color: "#666",
   },
 };
 
