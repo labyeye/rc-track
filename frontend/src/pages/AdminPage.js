@@ -566,11 +566,12 @@ const AdminPage = () => {
       </div>
     </div>
   );
-
   const RcTransferStatusTable = () => {
     const [rcEntries, setRcEntries] = useState([]);
+    const [filteredEntries, setFilteredEntries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [daysFilter, setDaysFilter] = useState("");
 
     useEffect(() => {
       const fetchRcEntries = async () => {
@@ -585,13 +586,13 @@ const AdminPage = () => {
           if (!response.ok) throw new Error("Failed to fetch RC entries");
 
           const responseData = await response.json();
-          // Filter to only show entries that aren't transferred
           const nonTransferredEntries = Array.isArray(responseData.data)
             ? responseData.data.filter(
                 (entry) => entry.status !== "transferred"
               )
             : [];
           setRcEntries(nonTransferredEntries);
+          setFilteredEntries(nonTransferredEntries);
         } catch (err) {
           setError(err.message);
         } finally {
@@ -601,6 +602,18 @@ const AdminPage = () => {
 
       fetchRcEntries();
     }, []);
+
+    useEffect(() => {
+      if (daysFilter) {
+        const filtered = rcEntries.filter((entry) => {
+          const daysOverdue = calculateDaysOverdue(entry.createdAt);
+          return daysOverdue === parseInt(daysFilter); // Exact match
+        });
+        setFilteredEntries(filtered);
+      } else {
+        setFilteredEntries(rcEntries); // Show all when empty
+      }
+    }, [daysFilter, rcEntries]);
 
     const calculateDaysOverdue = (createdAt) => {
       if (!createdAt) return 0;
@@ -742,9 +755,32 @@ const AdminPage = () => {
 
     return (
       <div style={{ marginTop: "24px" }}>
-        <h2 style={{ fontSize: "1.5rem", marginBottom: "16px" }}>
-          Pending RC Transfers ({rcEntries.length})
-        </h2>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "16px",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "12px" : "0",
+          }}
+        >
+          <h2 style={{ fontSize: "1.5rem", margin: 0 }}>
+            Pending RC Transfers ({filteredEntries.length})
+          </h2>
+
+          <Input
+            placeholder="Filter by days overdue (e.g. 20)"
+            value={daysFilter}
+            onChange={(e) => setDaysFilter(e.target.value)}
+            style={{
+              width: isMobile ? "100%" : "300px",
+              borderRadius: "6px",
+            }}
+            type="number"
+            min="0"
+          />
+        </div>
         {error && (
           <Alert
             message={error}
@@ -754,7 +790,7 @@ const AdminPage = () => {
         )}
         <Table
           columns={columns}
-          dataSource={rcEntries}
+          dataSource={filteredEntries}
           loading={loading}
           rowKey="_id"
           bordered
@@ -765,7 +801,8 @@ const AdminPage = () => {
         />
       </div>
     );
-  };return (
+  };
+  return (
     <div style={styles.container}>
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
