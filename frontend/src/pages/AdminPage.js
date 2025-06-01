@@ -15,6 +15,7 @@ import { Button, message, Modal, Input, Form } from "antd";
 import { useNavigate } from "react-router-dom";
 import { Table, Alert, Spin } from "antd";
 import AuthContext from "../context/AuthContext";
+import { useMediaQuery } from "react-responsive";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://rc-track.onrender.com";
@@ -40,7 +41,215 @@ const AdminPage = () => {
   const [changePasswordLoading, setChangePasswordLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const isTablet = useMediaQuery({ minWidth: 769, maxWidth: 1024 });
 
+  const styles = {
+    container: {
+      display: "flex",
+      height: "100vh",
+      backgroundColor: "#f3f4f6",
+      fontFamily: "Arial, sans-serif",
+      flexDirection: isMobile ? "column" : "row",
+      minHeight: isMobile ? "100vh" : "100vh",
+    },
+    sidebar: {
+      width: isMobile ? "100%" : isTablet ? "250px" : "280px",
+      backgroundColor: "#1e293b",
+      color: "#f8fafc",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      position: isMobile ? "relative" : "sticky",
+      top: 0,
+      height: isMobile ? "auto" : "100vh",
+      backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+    },
+    sidebarHeader: {
+      padding: isMobile ? "12px 16px" : isTablet ? "16px 20px" : "24px",
+      borderBottom: "1px solid #334155",
+      textAlign: isMobile ? "center" : "left",
+    },
+    sidebarTitle: {
+      fontSize: isMobile ? "1rem" : isTablet ? "1.125rem" : "1.25rem",
+      fontWeight: "600",
+      color: "#ffffff",
+      margin: 0,
+    },
+    sidebarSubtitle: {
+      fontSize: isMobile ? "0.75rem" : isTablet ? "0.8125rem" : "0.875rem",
+      color: "#94a3b8",
+      margin: "4px 0 0 0",
+    },
+    nav: {
+      padding: isMobile ? "8px 0" : isTablet ? "12px 0" : "16px 0",
+      display: isMobile ? "flex" : "block",
+      flexWrap: isMobile ? "wrap" : "nowrap",
+      gap: isMobile ? "4px" : "0",
+      justifyContent: isMobile ? "center" : "flex-start",
+      flexDirection: isMobile ? "column" : "column",
+    },
+    menuItem: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: isMobile ? "center" : "space-between",
+      padding: isMobile ? "8px 12px" : isTablet ? "10px 16px" : "12px 24px",
+      cursor: "pointer",
+      color: "#e2e8f0",
+      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      borderRadius: isMobile ? "6px" : "0",
+      margin: isMobile ? "0 4px" : "0",
+      minWidth: isMobile ? "100px" : "auto",
+      fontSize: isMobile ? "0.875rem" : "1rem",
+    },
+    menuItemActive: {
+      backgroundColor: isMobile ? "#475569" : "#334155",
+      borderRight: isMobile ? "none" : "3px solid #3b82f6",
+      borderBottom: isMobile ? "3px solid #3b82f6" : "none",
+      color: "#ffffff",
+    },
+    menuItemContent: {
+      display: "flex",
+      alignItems: "center",
+      flexDirection: isMobile ? "column" : "row",
+      gap: isMobile ? "2px" : "0",
+      textAlign: isMobile ? "center" : "left",
+    },
+    menuIcon: {
+      marginRight: isMobile ? "0" : "12px",
+      marginBottom: isMobile ? "2px" : "0",
+      color: "#94a3b8",
+      width: isMobile ? "16px" : "20px",
+      height: isMobile ? "16px" : "20px",
+    },
+    menuText: {
+      fontSize: isMobile ? "0.6875rem" : isTablet ? "0.875rem" : "0.9375rem",
+      fontWeight: isMobile ? "400" : "500",
+    },
+    submenu: {
+      backgroundColor: "#1a2536",
+      display: isMobile ? "none" : "block",
+    },
+    submenuItem: {
+      padding: isMobile ? "8px 16px" : "10px 24px 10px 64px",
+      cursor: "pointer",
+      color: "#cbd5e1",
+      fontSize: isMobile ? "0.8125rem" : "0.875rem",
+      transition: "all 0.2s ease",
+    },
+    logoutButton: {
+      display: "flex",
+      alignItems: "center",
+      padding: isMobile ? "8px 12px" : isTablet ? "10px 16px" : "12px 24px",
+      cursor: "pointer",
+      color: isMobile ? "#ffffff" : "#f87171",
+      marginTop: isMobile ? "8px" : "16px",
+      borderTop: isMobile ? "none" : "1px solid #334155",
+      transition: "all 0.2s ease",
+      borderRadius: isMobile ? "6px" : "0",
+      margin: isMobile ? "8px 4px 0 4px" : "16px 0 0 0",
+      justifyContent: isMobile ? "center" : "flex-start",
+      backgroundColor: isMobile ? "#dc2626" : "transparent",
+      fontSize: isMobile ? "0.875rem" : "1rem",
+    },
+    mainContent: {
+      flex: 1,
+      overflow: "auto",
+      width: isMobile ? "100%" : "auto",
+    },
+    contentPadding: {
+      padding: isMobile ? "12px" : isTablet ? "16px" : "32px",
+    },
+    header: {
+      marginBottom: isMobile ? "12px" : isTablet ? "16px" : "24px",
+      textAlign: isMobile ? "center" : "left",
+    },
+    pageTitle: {
+      fontSize: isMobile ? "1.25rem" : isTablet ? "1.375rem" : "1.875rem",
+      fontWeight: "bold",
+      color: "#1f2937",
+      margin: 0,
+    },
+    pageSubtitle: {
+      color: "#6b7280",
+      marginTop: isMobile ? "4px" : "8px",
+      margin: `${isMobile ? "4px" : "8px"} 0 0 0`,
+      fontSize: isMobile ? "0.8125rem" : isTablet ? "0.875rem" : "1rem",
+    },
+    cardsGrid: {
+      display: "grid",
+      gridTemplateColumns: isMobile
+        ? "1fr"
+        : isTablet
+        ? "repeat(2, 1fr)"
+        : "repeat(auto-fit, minmax(250px, 1fr))",
+      gap: isMobile ? "12px" : isTablet ? "16px" : "24px",
+      marginBottom: isMobile ? "16px" : isTablet ? "20px" : "32px",
+    },
+    card: {
+      backgroundColor: "#ffffff",
+      borderRadius: isMobile ? "8px" : isTablet ? "10px" : "12px",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      padding: isMobile ? "16px" : isTablet ? "20px" : "24px",
+      transition: "transform 0.2s",
+    },
+    cardContent: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    cardLabel: {
+      fontSize: isMobile ? "0.75rem" : isTablet ? "0.8125rem" : "0.875rem",
+      fontWeight: "500",
+      color: "#6b7280",
+      margin: 0,
+    },
+    cardValue: {
+      fontSize: isMobile ? "1.25rem" : isTablet ? "1.5rem" : "1.875rem",
+      fontWeight: "bold",
+      color: "#1f2937",
+      margin: "4px 0 0 0",
+    },
+    cardIcon: {
+      padding: isMobile ? "8px" : "12px",
+      borderRadius: "50%",
+    },
+    placeholderCard: {
+      backgroundColor: "#ffffff",
+      borderRadius: isMobile ? "8px" : isTablet ? "10px" : "12px",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      padding: isMobile ? "16px" : isTablet ? "20px" : "32px",
+      textAlign: "center",
+    },
+    placeholderTitle: {
+      fontSize: isMobile ? "1.125rem" : isTablet ? "1.25rem" : "1.5rem",
+      fontWeight: "600",
+      color: "#1f2937",
+      marginBottom: "12px",
+      margin: "0 0 12px 0",
+    },
+    placeholderText: {
+      color: "#6b7280",
+      margin: 0,
+      fontSize: isMobile ? "0.8125rem" : isTablet ? "0.875rem" : "1rem",
+    },
+    loadingContainer: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "300px",
+    },
+    headerControls: {
+      display: "flex",
+      gap: isMobile ? "8px" : "16px",
+      alignItems: "center",
+      flexDirection: isMobile ? "column" : "row",
+      marginTop: isMobile ? "12px" : "0",
+    },
+    controlButton: {
+      fontSize: isMobile ? "0.8125rem" : isTablet ? "0.875rem" : "1rem",
+      padding: isMobile ? "6px 12px" : isTablet ? "8px 16px" : "8px 16px",
+      width: isMobile ? "100%" : "auto",
+    },
+  };
   useEffect(() => {
     if (activeMenu === "Dashboard") {
       fetchDashboardData();
@@ -124,42 +333,42 @@ const AdminPage = () => {
   };
 
   const calculateRcStats = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/rc`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      },
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rc`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
+      });
 
-    if (!response.ok) throw new Error("Failed to fetch RC entries");
+      if (!response.ok) throw new Error("Failed to fetch RC entries");
 
-    const responseData = await response.json();
-    const rcEntries = Array.isArray(responseData.data)
-      ? responseData.data
-      : [];
+      const responseData = await response.json();
+      const rcEntries = Array.isArray(responseData.data)
+        ? responseData.data
+        : [];
 
-    return {
-      totalRc: rcEntries.length,
-      totalRcTransferred: rcEntries.filter(
-        (entry) => entry.status?.rcTransferred
-      ).length,
-      totalRtoFeeDone: rcEntries.filter(
-        (entry) => entry.status?.rtoFeesPaid === true
-      ).length,
-      totalRcTransferLeft: rcEntries.filter(
-        (entry) => !entry.status?.rcTransferred
-      ).length,
-    };
-  } catch (error) {
-    console.error("Error calculating RC stats:", error);
-    return {
-      totalRc: 0,
-      totalRcTransferred: 0,
-      totalRtoFeeDone: 0,
-      totalRcTransferLeft: 0,
-    };
-  }
-};
+      return {
+        totalRc: rcEntries.length,
+        totalRcTransferred: rcEntries.filter(
+          (entry) => entry.status?.rcTransferred
+        ).length,
+        totalRtoFeeDone: rcEntries.filter(
+          (entry) => entry.status?.rtoFeesPaid === true
+        ).length,
+        totalRcTransferLeft: rcEntries.filter(
+          (entry) => !entry.status?.rcTransferred
+        ).length,
+      };
+    } catch (error) {
+      console.error("Error calculating RC stats:", error);
+      return {
+        totalRc: 0,
+        totalRcTransferred: 0,
+        totalRtoFeeDone: 0,
+        totalRcTransferLeft: 0,
+      };
+    }
+  };
 
   const toggleOwnerView = () => {
     setIsOwnerView(!isOwnerView);
@@ -556,9 +765,7 @@ const AdminPage = () => {
         />
       </div>
     );
-  };
-
-  return (
+  };return (
     <div style={styles.container}>
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
@@ -624,8 +831,10 @@ const AdminPage = () => {
             <div
               style={{
                 display: "flex",
+                flexDirection: isMobile ? "column" : "row",
                 justifyContent: "space-between",
-                alignItems: "center",
+                alignItems: isMobile ? "flex-start" : "center",
+                gap: isMobile ? "12px" : "16px",
               }}
             >
               <div>
@@ -643,18 +852,16 @@ const AdminPage = () => {
                   )}
                 </p>
               </div>
-              <div
-                style={{ display: "flex", gap: "16px", alignItems: "center" }}
-              >
+              <div style={styles.headerControls}>
                 <ChangePasswordButton />
                 <button
                   onClick={toggleOwnerView}
                   style={{
+                    ...styles.controlButton,
                     backgroundColor: isOwnerView ? "#10b981" : "#3b82f6",
                     color: "white",
                     border: "none",
                     borderRadius: "6px",
-                    padding: "8px 16px",
                     cursor: "pointer",
                     transition: "background-color 0.2s",
                   }}
@@ -674,13 +881,14 @@ const AdminPage = () => {
                 <button
                   onClick={fetchDashboardData}
                   style={{
+                    ...styles.controlButton,
                     backgroundColor: "#f59e0b",
                     color: "white",
                     border: "none",
                     borderRadius: "6px",
-                    padding: "8px 16px",
                     display: "flex",
                     alignItems: "center",
+                    justifyContent: "center",
                     gap: "8px",
                     cursor: "pointer",
                     transition: "background-color 0.2s",
@@ -736,170 +944,6 @@ const AdminPage = () => {
       <ChangePasswordModal />
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    height: "100vh",
-    backgroundColor: "#f3f4f6",
-    fontFamily: "Arial, sans-serif",
-  },
-  sidebar: {
-    width: "280px",
-    backgroundColor: "#1e293b",
-    color: "#f8fafc",
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-    position: "sticky",
-    top: 0,
-    height: "100vh",
-    backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
-  },
-  sidebarHeader: {
-    padding: "24px",
-    borderBottom: "1px solid #334155",
-  },
-  sidebarTitle: {
-    fontSize: "1.25rem",
-    fontWeight: "600",
-    color: "#ffffff",
-    margin: 0,
-  },
-  sidebarSubtitle: {
-    fontSize: "0.875rem",
-    color: "#94a3b8",
-    margin: "4px 0 0 0",
-  },
-  nav: {
-    padding: "16px 0",
-  },
-  menuItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  },
-  menuItemActive: {
-    backgroundColor: "#334155",
-    borderRight: "3px solid #3b82f6",
-    color: "#ffffff",
-  },
-  menuItemContent: {
-    display: "flex",
-    alignItems: "center",
-  },
-  menuIcon: {
-    marginRight: "12px",
-    color: "#94a3b8",
-  },
-  menuText: {
-    fontSize: "0.9375rem",
-    fontWeight: "500",
-  },
-  submenu: {
-    backgroundColor: "#1a2536",
-  },
-  submenuItem: {
-    padding: "10px 24px 10px 64px",
-    cursor: "pointer",
-    color: "#cbd5e1",
-    fontSize: "0.875rem",
-    transition: "all 0.2s ease",
-  },
-  logoutButton: {
-    display: "flex",
-    alignItems: "center",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#f87171",
-    marginTop: "16px",
-    borderTop: "1px solid #334155",
-    transition: "all 0.2s ease",
-  },
-  mainContent: {
-    flex: 1,
-    overflow: "auto",
-  },
-  contentPadding: {
-    padding: "32px",
-  },
-  header: {
-    marginBottom: "32px",
-  },
-  pageTitle: {
-    fontSize: "1.875rem",
-    fontWeight: "bold",
-    color: "#1f2937",
-    margin: 0,
-  },
-  pageSubtitle: {
-    color: "#6b7280",
-    marginTop: "8px",
-    margin: "8px 0 0 0",
-  },
-  cardsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-    gap: "24px",
-    marginBottom: "32px",
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "24px",
-    transition: "transform 0.2s",
-  },
-  cardContent: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cardLabel: {
-    fontSize: "0.875rem",
-    fontWeight: "500",
-    color: "#6b7280",
-    margin: 0,
-  },
-  cardValue: {
-    fontSize: "1.875rem",
-    fontWeight: "bold",
-    color: "#1f2937",
-    margin: "4px 0 0 0",
-  },
-  cardIcon: {
-    padding: "12px",
-    borderRadius: "50%",
-  },
-  placeholderCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "32px",
-    textAlign: "center",
-  },
-  placeholderTitle: {
-    fontSize: "1.5rem",
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: "16px",
-    margin: "0 0 16px 0",
-  },
-  placeholderText: {
-    color: "#6b7280",
-    margin: 0,
-  },
-  loadingContainer: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "300px",
-  },
 };
 
 export default AdminPage;

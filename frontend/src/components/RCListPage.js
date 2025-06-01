@@ -24,12 +24,15 @@ import {
 import AuthContext from "../context/AuthContext";
 import { ShoppingCart, LayoutDashboard, TrendingUp } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useMediaQuery } from "react-responsive";
 const { Option } = Select;
 const { TextArea } = Input;
 
 const RcListPage = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const isTablet = useMediaQuery({ minWidth: 769, maxWidth: 1024 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [rcEntries, setRcEntries] = useState([]);
@@ -44,6 +47,239 @@ const RcListPage = () => {
     rtoFeesPaid: null,
   });
   const [form] = Form.useForm();
+  const styles = {
+    container: {
+      display: "flex",
+      height: "100vh",
+      backgroundColor: "#f3f4f6",
+      fontFamily: "Arial, sans-serif",
+      flexDirection: isMobile ? "column" : "row",
+      minHeight: isMobile ? "100vh" : "100vh",
+    },
+    sidebar: {
+      width: isMobile ? "100%" : isTablet ? "250px" : "280px",
+      backgroundColor: "#1e293b",
+      color: "#f8fafc",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      position: isMobile ? "relative" : "sticky",
+      top: 0,
+      height: isMobile ? "auto" : "100vh",
+      backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+    },
+    sidebarHeader: {
+      padding: isMobile ? "12px 16px" : isTablet ? "16px 20px" : "24px",
+      borderBottom: "1px solid #334155",
+      textAlign: isMobile ? "center" : "left",
+    },
+    sidebarTitle: {
+      fontSize: isMobile ? "1rem" : isTablet ? "1.125rem" : "1.25rem",
+      fontWeight: "600",
+      color: "#ffffff",
+      margin: 0,
+    },
+    sidebarSubtitle: {
+      fontSize: isMobile ? "0.75rem" : isTablet ? "0.8125rem" : "0.875rem",
+      color: "#94a3b8",
+      margin: "4px 0 0 0",
+    },
+    nav: {
+      padding: isMobile ? "8px 0" : isTablet ? "12px 0" : "16px 0",
+      display: isMobile ? "flex" : "block",
+      flexWrap: isMobile ? "wrap" : "nowrap",
+      gap: isMobile ? "4px" : "0",
+      justifyContent: isMobile ? "center" : "flex-start",
+      flexDirection: isMobile ? "column" : "column",
+    },
+    menuItem: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: isMobile ? "center" : "space-between",
+      padding: isMobile ? "8px 12px" : isTablet ? "10px 16px" : "12px 24px",
+      cursor: "pointer",
+      color: "#e2e8f0",
+      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      borderRadius: isMobile ? "6px" : "0",
+      margin: isMobile ? "0 4px" : "0",
+      minWidth: isMobile ? "100px" : "auto",
+      fontSize: isMobile ? "0.875rem" : "1rem",
+    },
+    menuItemActive: {
+      backgroundColor: isMobile ? "#475569" : "#334155",
+      borderRight: isMobile ? "none" : "3px solid #3b82f6",
+      borderBottom: isMobile ? "3px solid #3b82f6" : "none",
+      color: "#ffffff",
+    },
+    menuItemContent: {
+      display: "flex",
+      alignItems: "center",
+      flexDirection: isMobile ? "column" : "row",
+      gap: isMobile ? "2px" : "0",
+      textAlign: isMobile ? "center" : "left",
+    },
+    menuIcon: {
+      marginRight: isMobile ? "0" : "12px",
+      marginBottom: isMobile ? "2px" : "0",
+      color: "#94a3b8",
+      width: isMobile ? "16px" : "20px",
+      height: isMobile ? "16px" : "20px",
+    },
+    menuText: {
+      fontSize: isMobile ? "0.6875rem" : isTablet ? "0.875rem" : "0.9375rem",
+      fontWeight: isMobile ? "400" : "500",
+    },
+    submenu: {
+      backgroundColor: "#1a2536",
+      display: isMobile ? "none" : "block", // Hide submenus on mobile
+    },
+    submenuItem: {
+      padding: isMobile ? "8px 16px" : "10px 24px 10px 64px",
+      cursor: "pointer",
+      color: "#cbd5e1",
+      fontSize: isMobile ? "0.8125rem" : "0.875rem",
+      transition: "all 0.2s ease",
+    },
+    logoutButton: {
+      display: "flex",
+      alignItems: "center",
+      padding: isMobile ? "8px 12px" : isTablet ? "10px 16px" : "12px 24px",
+      cursor: "pointer",
+      color: isMobile ? "#ffffff" : "#f87171",
+      marginTop: isMobile ? "8px" : "16px",
+      borderTop: isMobile ? "none" : "1px solid #334155",
+      transition: "all 0.2s ease",
+      borderRadius: isMobile ? "6px" : "0",
+      margin: isMobile ? "8px 4px 0 4px" : "16px 0 0 0",
+      justifyContent: isMobile ? "center" : "flex-start",
+      backgroundColor: isMobile ? "#dc2626" : "transparent",
+      fontSize: isMobile ? "0.875rem" : "1rem",
+    },
+    mainContent: {
+      flex: 1,
+      overflow: "auto",
+      width: isMobile ? "100%" : "auto",
+    },
+    contentPadding: {
+      padding: isMobile ? "12px" : isTablet ? "16px" : "32px",
+    },
+    header: {
+      marginBottom: isMobile ? "12px" : isTablet ? "16px" : "24px",
+      textAlign: isMobile ? "center" : "left",
+    },
+    pageTitle: {
+      fontSize: isMobile ? "1.25rem" : isTablet ? "1.375rem" : "1.875rem",
+      fontWeight: "bold",
+      color: "#1f2937",
+      margin: 0,
+    },
+    pageSubtitle: {
+      color: "#6b7280",
+      marginTop: isMobile ? "4px" : "8px",
+      margin: `${isMobile ? "4px" : "8px"} 0 0 0`,
+      fontSize: isMobile ? "0.8125rem" : isTablet ? "0.875rem" : "1rem",
+    },
+    searchContainer: {
+      marginBottom: isMobile ? "12px" : isTablet ? "16px" : "24px",
+      display: "flex",
+      alignItems: "flex-start",
+      gap: isMobile ? "8px" : "16px",
+      flexWrap: "wrap",
+      flexDirection: isMobile ? "column" : "row",
+    },
+    searchInput: {
+      maxWidth: isMobile ? "100%" : "400px",
+      width: isMobile ? "100%" : "auto",
+    },
+    searchControls: {
+      display: "flex",
+      gap: isMobile ? "8px" : "16px",
+      flexWrap: "wrap",
+      width: isMobile ? "100%" : "auto",
+      flexDirection: isMobile ? "column" : "row",
+    },
+    loadingContainer: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "300px",
+    },
+    table: {
+      backgroundColor: "#ffffff",
+      borderRadius: isMobile ? "6px" : isTablet ? "8px" : "12px",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      overflow: "hidden",
+      fontSize: isMobile ? "0.8125rem" : isTablet ? "0.875rem" : "1rem",
+      minWidth: isMobile ? "800px" : "auto", // Set a minimum width for mobile
+    },
+    tableWrapper: {
+      overflowX: "auto",
+      WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
+      width: "100%",
+      maxWidth: "100vw",
+      margin: 0,
+      padding: 0,
+      display: "block",
+    },
+    statusContainer: {
+      display: "flex",
+      flexDirection: "column",
+      gap: isMobile ? "2px" : "4px",
+    },
+    statusActive: {
+      color: "#059669",
+      fontSize: isMobile ? "9px" : isTablet ? "10px" : "12px",
+      backgroundColor: "#d1fae5",
+      padding: isMobile ? "2px 4px" : isTablet ? "2px 6px" : "4px 8px",
+      borderRadius: "4px",
+      display: "inline-block",
+    },
+    statusInactive: {
+      color: "#6b7280",
+      fontSize: isMobile ? "9px" : isTablet ? "10px" : "12px",
+      backgroundColor: "#f3f4f6",
+      padding: isMobile ? "2px 4px" : isTablet ? "2px 6px" : "4px 8px",
+      borderRadius: "4px",
+      display: "inline-block",
+    },
+    actionsContainer: {
+      display: "flex",
+      gap: isMobile ? "4px" : "8px",
+    },
+    actionButton: {
+      backgroundColor: "transparent",
+      border: "none",
+      color: "#3b82f6",
+      cursor: "pointer",
+      padding: isMobile ? "2px" : "4px",
+      borderRadius: "4px",
+    },
+    filterDropdown: {
+      position: isMobile ? "relative" : "absolute",
+      backgroundColor: "#fff",
+      padding: isMobile ? "8px" : isTablet ? "12px" : "16px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+      zIndex: 10000,
+      marginTop: isMobile ? "0" : "8px",
+      display: "flex",
+      gap: isMobile ? "8px" : isTablet ? "12px" : "16px",
+      width: isMobile ? "100%" : "auto",
+      flexDirection: isMobile ? "column" : "row",
+    },
+    filterGroup: {
+      display: "flex",
+      flexDirection: "column",
+      gap: isMobile ? "4px" : "8px",
+    },
+    filterLabel: {
+      fontSize: isMobile ? "12px" : isTablet ? "13px" : "14px",
+      color: "#666",
+    },
+    responsiveButton: {
+      fontSize: isMobile ? "0.8125rem" : isTablet ? "0.875rem" : "1rem",
+      padding: isMobile ? "6px 12px" : isTablet ? "8px 16px" : "8px 16px",
+      width: isMobile ? "100%" : "auto",
+    },
+  };
   const API_BASE_URL =
     process.env.REACT_APP_API_BASE_URL || "https://rc-track.onrender.com";
 
@@ -381,7 +617,7 @@ const RcListPage = () => {
                 : styles.statusInactive
             }
           >
-            RC Transferred: {record.status?.rcTransferred ? "Yes" : "No"}
+            RC: {record.status?.rcTransferred ? "Yes" : "No"}
           </span>
           <span
             style={
@@ -390,7 +626,7 @@ const RcListPage = () => {
                 : styles.statusInactive
             }
           >
-            RTO Fees Paid: {record.status?.rtoFeesPaid ? "Yes" : "No"}
+            RTO: {record.status?.rtoFeesPaid ? "Yes" : "No"}
           </span>
         </div>
       ),
@@ -636,6 +872,7 @@ const RcListPage = () => {
               bordered
               pagination={{ pageSize: 10 }}
               style={styles.table}
+              scroll={{ x: isMobile ? true : false }}
               locale={{
                 emptyText: "No RC entries found",
               }}
@@ -647,190 +884,4 @@ const RcListPage = () => {
     </div>
   );
 };
-
-const styles = {
-  container: {
-    display: "flex",
-    height: "100vh",
-    backgroundColor: "#f3f4f6",
-    fontFamily: "Arial, sans-serif",
-  },
-  sidebar: {
-    width: "280px",
-    backgroundColor: "#1e293b",
-    color: "#f8fafc",
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-    position: "sticky",
-    top: 0,
-    height: "100vh",
-    backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
-  },
-  sidebarHeader: {
-    padding: "24px",
-    borderBottom: "1px solid #334155",
-  },
-  sidebarTitle: {
-    fontSize: "1.25rem",
-    fontWeight: "600",
-    color: "#ffffff",
-    margin: 0,
-  },
-  sidebarSubtitle: {
-    fontSize: "0.875rem",
-    color: "#94a3b8",
-    margin: "4px 0 0 0",
-  },
-  nav: {
-    padding: "16px 0",
-  },
-  menuItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  },
-  menuItemActive: {
-    backgroundColor: "#334155",
-    borderRight: "3px solid #3b82f6",
-    color: "#ffffff",
-  },
-  menuItemContent: {
-    display: "flex",
-    alignItems: "center",
-  },
-  menuIcon: {
-    marginRight: "12px",
-    color: "#94a3b8",
-  },
-  menuText: {
-    fontSize: "0.9375rem",
-    fontWeight: "500",
-  },
-  submenu: {
-    backgroundColor: "#1a2536",
-  },
-  submenuItem: {
-    padding: "10px 24px 10px 64px",
-    cursor: "pointer",
-    color: "#cbd5e1",
-    fontSize: "0.875rem",
-    transition: "all 0.2s ease",
-  },
-  logoutButton: {
-    display: "flex",
-    alignItems: "center",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#f87171",
-    marginTop: "16px",
-    borderTop: "1px solid #334155",
-    transition: "all 0.2s ease",
-  },
-  mainContent: {
-    flex: 1,
-    overflow: "auto",
-  },
-  contentPadding: {
-    padding: "32px",
-  },
-  header: {
-    marginBottom: "24px",
-  },
-  pageTitle: {
-    fontSize: "1.875rem",
-    fontWeight: "bold",
-    color: "#1f2937",
-    margin: 0,
-  },
-  pageSubtitle: {
-    color: "#6b7280",
-    marginTop: "8px",
-    margin: "8px 0 0 0",
-  },
-  searchContainer: {
-    marginBottom: "24px",
-  },
-  searchInput: {
-    maxWidth: "400px",
-  },
-  loadingContainer: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "300px",
-  },
-  table: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-    overflow: "hidden",
-  },
-  statusContainer: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "4px",
-  },
-  statusActive: {
-    color: "#059669",
-    fontSize: "12px",
-    backgroundColor: "#d1fae5",
-    padding: "4px 8px",
-    borderRadius: "4px",
-    display: "inline-block",
-  },
-  statusInactive: {
-    color: "#6b7280",
-    fontSize: "12px",
-    backgroundColor: "#f3f4f6",
-    padding: "4px 8px",
-    borderRadius: "4px",
-    display: "inline-block",
-  },
-  actionsContainer: {
-    display: "flex",
-    gap: "8px",
-  },
-  actionButton: {
-    backgroundColor: "transparent",
-    border: "none",
-    color: "#3b82f6",
-    cursor: "pointer",
-    padding: "4px",
-    borderRadius: "4px",
-    ":hover": {
-      backgroundColor: "#e0e7ff",
-    },
-    ":disabled": {
-      color: "#9ca3af",
-      cursor: "not-allowed",
-      ":hover": {
-        backgroundColor: "transparent",
-      },
-    },
-  },
-  filterDropdown: {
-    position: "absolute",
-    backgroundColor: "#fff",
-    padding: "16px",
-    borderRadius: "8px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-    zIndex: 10000,
-    marginTop: "8px",
-    display: "flex",
-    gap: "16px",
-  },
-  filterGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-  },
-  filterLabel: {
-    fontSize: "14px",
-    color: "#666",
-  },
-};
-
 export default RcListPage;
