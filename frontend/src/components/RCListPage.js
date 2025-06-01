@@ -432,6 +432,7 @@ const RcListPage = () => {
       remarks: record.remarks,
       rcTransferred: Boolean(record.status?.rcTransferred),
       rtoFeesPaid: Boolean(record.status?.rtoFeesPaid),
+      returnedToDealer: Boolean(record.status?.returnedToDealer),
     });
     setIsEditModalVisible(true);
   };
@@ -452,6 +453,7 @@ const RcListPage = () => {
         status: {
           rcTransferred: Boolean(values.rcTransferred),
           rtoFeesPaid: Boolean(values.rtoFeesPaid),
+          returnedToDealer: Boolean(values.returnedToDealer),
         },
       };
 
