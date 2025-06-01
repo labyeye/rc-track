@@ -47,6 +47,10 @@ const rcSchema = new mongoose.Schema({
     rtoFeesPaid: {
       type: Boolean,
       default: false
+    },
+      returnedToDealer: {
+      type: Boolean,
+      default: false
     }
   },
   pdfUrl: {

@@ -48,7 +48,7 @@ exports.getRcEntryById = async (req, res, next) => {
     if (!rcEntry) {
       return res.status(404).json({
         success: false,
-        message: 'RC Entry not found'
+        message: "RC Entry not found",
       });
     }
 
@@ -64,19 +64,20 @@ exports.getRcEntryById = async (req, res, next) => {
 exports.updateRcEntry = async (req, res, next) => {
   try {
     let rcEntry = await Rc.findById(req.params.id);
-    
+
     if (!rcEntry) {
       return res.status(404).json({
         success: false,
-        message: 'RC Entry not found'
+        message: "RC Entry not found",
       });
     }
-
-    // Check if user has permission to update (if not admin, only allow updating own entries)
-    if (req.user.role !== "admin" && rcEntry.createdBy.toString() !== req.user.id) {
+    if (
+      req.user.role !== "admin" &&
+      rcEntry.createdBy.toString() !== req.user.id
+    ) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to update this RC entry'
+        message: "Not authorized to update this RC entry",
       });
     }
 
@@ -84,8 +85,11 @@ exports.updateRcEntry = async (req, res, next) => {
     if (updateData.rtoFeesPaid !== undefined) {
       updateData.rtoFeesPaid = Boolean(updateData.rtoFeesPaid);
     }
-    
-    console.log('Updating RC entry with data:', updateData);
+    if (updateData.returnedToDealer !== undefined) {
+      updateData.returnedToDealer = Boolean(updateData.returnedToDealer);
+    }
+
+    console.log("Updating RC entry with data:", updateData);
 
     rcEntry = await Rc.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
@@ -97,7 +101,7 @@ exports.updateRcEntry = async (req, res, next) => {
       data: rcEntry,
     });
   } catch (err) {
-    console.error('Update error:', err); 
+    console.error("Update error:", err);
     next(err);
   }
 };
@@ -105,19 +109,22 @@ exports.updateRcEntry = async (req, res, next) => {
 exports.deleteRcEntry = async (req, res, next) => {
   try {
     const rcEntry = await Rc.findById(req.params.id);
-    
+
     if (!rcEntry) {
       return res.status(404).json({
         success: false,
-        message: 'RC Entry not found'
+        message: "RC Entry not found",
       });
     }
 
     // Check if user has permission to delete (if not admin, only allow deleting own entries)
-    if (req.user.role !== "admin" && rcEntry.createdBy.toString() !== req.user.id) {
+    if (
+      req.user.role !== "admin" &&
+      rcEntry.createdBy.toString() !== req.user.id
+    ) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to delete this RC entry'
+        message: "Not authorized to delete this RC entry",
       });
     }
 
@@ -131,10 +138,10 @@ exports.deleteRcEntry = async (req, res, next) => {
         );
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
-          console.log('PDF file deleted:', filePath);
+          console.log("PDF file deleted:", filePath);
         }
       } catch (fileError) {
-        console.error('Error deleting PDF file:', fileError);
+        console.error("Error deleting PDF file:", fileError);
         // Don't fail the delete operation if file deletion fails
       }
     }
@@ -144,11 +151,11 @@ exports.deleteRcEntry = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'RC entry deleted successfully',
-      data: {}
+      message: "RC entry deleted successfully",
+      data: {},
     });
   } catch (err) {
-    console.error('Delete error:', err);
+    console.error("Delete error:", err);
     next(err);
   }
 };
@@ -156,23 +163,22 @@ exports.deleteRcEntry = async (req, res, next) => {
 exports.uploadRcPdf = async (req, res, next) => {
   try {
     const rcEntry = await Rc.findById(req.params.id);
-    
+
     if (!rcEntry) {
       return res.status(404).json({
         success: false,
-        message: 'RC Entry not found'
+        message: "RC Entry not found",
       });
     }
-
-    // Check if user has permission to upload (if not admin, only allow uploading to own entries)
-    if (req.user.role !== "admin" && rcEntry.createdBy.toString() !== req.user.id) {
+    if (
+      req.user.role !== "admin" &&
+      rcEntry.createdBy.toString() !== req.user.id
+    ) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to upload PDF for this RC entry'
+        message: "Not authorized to upload PDF for this RC entry",
       });
     }
-
-    // Delete old PDF file if it exists
     if (rcEntry.pdfUrl) {
       try {
         const oldFilePath = path.join(
@@ -182,11 +188,10 @@ exports.uploadRcPdf = async (req, res, next) => {
         );
         if (fs.existsSync(oldFilePath)) {
           fs.unlinkSync(oldFilePath);
-          console.log('Old PDF file deleted:', oldFilePath);
+          console.log("Old PDF file deleted:", oldFilePath);
         }
       } catch (fileError) {
-        console.error('Error deleting old PDF file:', fileError);
-        // Continue with upload even if old file deletion fails
+        console.error("Error deleting old PDF file:", fileError);
       }
     }
 
@@ -198,7 +203,7 @@ exports.uploadRcPdf = async (req, res, next) => {
       data: rcEntry,
     });
   } catch (err) {
-    console.error('Upload error:', err);
+    console.error("Upload error:", err);
     next(err);
   }
 };

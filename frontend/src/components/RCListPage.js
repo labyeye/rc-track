@@ -45,6 +45,7 @@ const RcListPage = () => {
   const [statusFilters, setStatusFilters] = useState({
     rcTransferred: null,
     rtoFeesPaid: null,
+    returnedToDealer: null,
   });
   const [form] = Form.useForm();
   const styles = {
@@ -352,6 +353,7 @@ const RcListPage = () => {
       Remarks: entry.remarks || "-",
       "RC Transferred": entry.status?.rcTransferred ? "Yes" : "No",
       "RTO Fees Paid": entry.status?.rtoFeesPaid ? "Yes" : "No",
+      "Returned To Dealer": entry.status?.returnedToDealer ? "Yes" : "No",
       "Created At": new Date(entry.createdAt).toLocaleString(),
     }));
 
@@ -405,8 +407,16 @@ const RcListPage = () => {
     const matchesRtoFeesPaid =
       statusFilters.rtoFeesPaid === null ||
       entry.status?.rtoFeesPaid === statusFilters.rtoFeesPaid;
+    const matchesReturnedToDealer =
+      statusFilters.returnedToDealer === null ||
+      entry.status?.returnedToDealer === statusFilters.returnedToDealer;
 
-    return matchesSearch && matchesRcTransferred && matchesRtoFeesPaid;
+    return (
+      matchesSearch &&
+      matchesRcTransferred &&
+      matchesRtoFeesPaid &&
+      matchesReturnedToDealer
+    );
   });
 
   const handleEdit = (record) => {
@@ -628,6 +638,15 @@ const RcListPage = () => {
           >
             RTO: {record.status?.rtoFeesPaid ? "Yes" : "No"}
           </span>
+          <span
+            style={
+              record.status?.returnedToDealer
+                ? styles.statusActive
+                : styles.statusInactive
+            }
+          >
+            Returned: {record.status?.returnedToDealer ? "Yes" : "No"}
+          </span>
         </div>
       ),
     },
@@ -718,6 +737,10 @@ const RcListPage = () => {
 
             <Form.Item name="rtoFeesPaid" valuePropName="checked">
               <Checkbox>RTO Fees Paid</Checkbox>
+            </Form.Item>
+            
+            <Form.Item name="returnedToDealer" valuePropName="checked">
+              <Checkbox>Returned To Dealer</Checkbox>
             </Form.Item>
           </div>
         </div>
@@ -832,6 +855,21 @@ const RcListPage = () => {
                     value={statusFilters.rtoFeesPaid}
                     onChange={(value) =>
                       handleStatusFilterChange("rtoFeesPaid", value)
+                    }
+                    placeholder="All"
+                  >
+                    <Option value={null}>All</Option>
+                    <Option value={true}>Yes</Option>
+                    <Option value={false}>No</Option>
+                  </Select>
+                </div>
+                <div style={styles.filterGroup}>
+                  <span style={styles.filterLabel}>Returned To Dealer:</span>
+                  <Select
+                    style={{ width: 120 }}
+                    value={statusFilters.returnedToDealer}
+                    onChange={(value) =>
+                      handleStatusFilterChange("returnedToDealer", value)
                     }
                     placeholder="All"
                   >
