@@ -22,7 +22,6 @@ const RcEntryPage = () => {
     },
     header: {
       display: "flex",
-      alignItems: "center",
       marginBottom: isMobile ? "16px" : "24px",
       flexDirection: isMobile ? "column" : "row",
       alignItems: isMobile ? "flex-start" : "center",
@@ -312,7 +311,7 @@ const RcEntryPage = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, checked } = e.target;
 
     if (name === "rcTransferred" || name === "rtoFeesPaid") {
       setFormData((prev) => ({
