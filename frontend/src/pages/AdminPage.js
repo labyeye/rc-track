@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext ,useCallback} from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -251,12 +251,12 @@ const AdminPage = () => {
     },
   };
   useEffect(() => {
-    if (activeMenu === "Dashboard") {
-      fetchDashboardData();
-    }
-  }, [activeMenu, isOwnerView]);
+  if (activeMenu === "Dashboard") {
+    fetchDashboardData();
+  }
+}, [activeMenu, isOwnerView, fetchDashboardData]);
 
-  const fetchDashboardData = async () => {
+const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -295,7 +295,7 @@ const AdminPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+});
   const handleChangePassword = async (values) => {
     try {
       setChangePasswordLoading(true);

@@ -327,7 +327,7 @@ const RcListPage = () => {
     };
 
     fetchRcEntries();
-  }, []);
+  }, [API_BASE_URL]);
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
