@@ -290,7 +290,7 @@ const AdminPage = () => {
     } finally {
       setLoading(false);
     }
-  });
+  }, [isOwnerView, user?.name]); // Added dependencies here
   useEffect(() => {
     if (activeMenu === "Dashboard") {
       fetchDashboardData();
